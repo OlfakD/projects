@@ -1,0 +1,122 @@
+[
+  {
+   "ParameterKey": "myWaitConditionTimeout",
+   "ParameterValue": "6000"
+  },
+  {
+   "ParameterKey": "myAppShortName",
+   "ParameterValue": "olfak"
+  },
+  {
+  "ParameterKey": "myEnvironmentType",
+  "ParameterValue": "nonprod"
+  },
+  {
+  "ParameterKey": "myEnvironmentTier",
+  "ParameterValue": "app"
+  },
+  {
+  "ParameterKey": "myTagAWSContacts",
+  "ParameterValue": "Oladipupo.Fakiye@usfoods.com"
+  },
+  {
+  "ParameterKey": "myTagBizUnit",
+  "ParameterValue": "IT"
+  },
+  {
+  "ParameterKey": "myInstanceType",
+  "ParameterValue": "t3.micro"
+  },
+  {
+  "ParameterKey": "myKeyName",
+  "ParameterValue": "olfakserver"
+  },
+  {
+  "ParameterKey": "myCustomAMIId",
+  "ParameterValue": "ami-02c21308fed24a8ab"
+  },
+  {
+  "ParameterKey": "myProfileRole",
+  "ParameterValue": "common-ec2-default-profile-role-v1"
+  },
+  {
+  "ParameterKey": "myRootVolumeVolumeSize",
+  "ParameterValue": "50"
+  },
+  {
+  "ParameterKey": "myVolume01Size",
+  "ParameterValue": "50"
+  },
+  {
+  "ParameterKey": "myVolume02Size",
+  "ParameterValue": "10"
+  },
+  {
+  "ParameterKey": "myInstanceSeq01",
+  "ParameterValue": "01"
+  },
+  {
+  "ParameterKey": "myInstanceSeq02",
+  "ParameterValue": "02"
+  },
+  {
+  "ParameterKey": "myInstanceSeq03",
+  "ParameterValue": "03"
+  },
+  {
+  "ParameterKey": "myInstanceSeq04",
+  "ParameterValue": "04"
+  },
+  {
+  "ParameterKey": "myInstanceSeq05",
+  "ParameterValue": "05"
+  },
+  {
+  "ParameterKey": "myInstanceSeq06",
+  "ParameterValue": "06"
+  },
+  {
+  "ParameterKey": "myInstanceSeq07",
+  "ParameterValue": "07"
+  },
+  {
+  "ParameterKey": "myInstanceSeq08",
+  "ParameterValue": "08"
+  },
+  {
+  "ParameterKey": "myInstanceSeq09",
+  "ParameterValue": "09"
+  },
+  {
+  "ParameterKey": "myInstanceSeq10",
+  "ParameterValue": "10"
+  },
+  {
+  "ParameterKey": "myInstanceAZ01",
+  "ParameterValue": "us-east-1a"
+  },
+  {
+  "ParameterKey": "myInstanceAZ02",
+  "ParameterValue": "us-east-1b"
+  },
+  {
+  "ParameterKey": "myInstanceAZ03",
+  "ParameterValue": "us-east-1c"
+  },
+  {
+  "ParameterKey": "myInstanceAZ04",
+  "ParameterValue": "us-east-1a"
+  },
+  {
+  "ParameterKey": "myInstanceCount",
+  "ParameterValue": "1"
+  },
+  {
+  "ParameterKey": "myOptionalVolume02CreateSnapshotOnDelete",
+  "ParameterValue": "false"
+  },
+  {
+  "ParameterKey": "myOptionalAppSecurityGroup01",
+  "ParameterValue": "sg-0fe7eab50c427345f"
+  }
+]
