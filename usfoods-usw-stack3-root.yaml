@@ -1,0 +1,977 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Knime EC2.Servers'
+
+# Conditions:
+#
+# # Conditions for EC2's
+#   CreateInstance01: !Equals [1, 1]
+#   CreateInstance02: !Not [!Equals [1, !Ref myInstanceCount]]
+#   CreateInstance03: !And
+#     - !Not [!Equals [1, !Ref myInstanceCount]]
+#     - !Not [!Equals [2, !Ref myInstanceCount]]
+#   CreateInstance04: !Equals [4, !Ref myInstanceCount]
+
+Conditions:
+
+# Conditions for EC2's
+
+  CreateInstance10: !Equals [10, !Ref myInstanceCount]
+  CreateInstance09: !Or
+    - !Equals [9, !Ref myInstanceCount]
+    - !Condition CreateInstance10
+  CreateInstance08: !Or
+    - !Equals [8, !Ref myInstanceCount]
+    - !Condition CreateInstance09
+  CreateInstance07: !Or
+    - !Equals [7, !Ref myInstanceCount]
+    - !Condition CreateInstance08
+  CreateInstance06: !Or
+    - !Equals [6, !Ref myInstanceCount]
+    - !Condition CreateInstance07
+  CreateInstance05: !Or
+    - !Equals [5, !Ref myInstanceCount]
+    - !Condition CreateInstance06
+  CreateInstance04: !Or
+    - !Equals [4, !Ref myInstanceCount]
+    - !Condition CreateInstance05
+  CreateInstance03: !Or
+    - !Equals [3, !Ref myInstanceCount]
+    - !Condition CreateInstance04
+  CreateInstance02: !Or
+    - !Equals [2, !Ref myInstanceCount]
+    - !Condition CreateInstance03
+  CreateInstance01: !Or
+    - !Equals [1, !Ref myInstanceCount]
+    - !Condition CreateInstance02
+
+# Conditions for associating targets to TargetGroup
+  CreateInstance01ToTG: !Equals [!Ref myInstanceCount, 1]
+  CreateInstance02ToTG: !Equals [!Ref myInstanceCount, 2]
+  CreateInstance03ToTG: !Equals [!Ref myInstanceCount, 3]
+  CreateInstance04ToTG: !Equals [!Ref myInstanceCount, 4]
+  CreateInstance05ToTG: !Equals [!Ref myInstanceCount, 5]
+  CreateInstance06ToTG: !Equals [!Ref myInstanceCount, 6]
+  CreateInstance07ToTG: !Equals [!Ref myInstanceCount, 7]
+  CreateInstance08ToTG: !Equals [!Ref myInstanceCount, 8]
+  CreateInstance09ToTG: !Equals [!Ref myInstanceCount, 9]
+  CreateInstance10ToTG: !Equals [!Ref myInstanceCount, 10]
+
+Mappings:
+
+ #*************** These are parameters unlikely to "change" between environments, so we are hardcoding here
+ #Made determination to "hardcode" following app-values:
+  myAppValues:
+   myPersistentValues:
+     myAppCode:                                 'KNIME'
+     myTagAppId:                                0000
+     myAppName:                                 "KNIME"
+     myALBAppName:                              'KNIME'
+     myTagStackScope:                           'application'
+     myServerAppCode:                           'exe'
+     myAMIType:                                 'myAmazonLinux'
+     myTagTechAppServerType:                    "app server"
+     myTagTechVolumeRootBackup:                 false
+     myTagTechVolume01Backup:                   false
+     myTagTechVolume02Backup:                   true
+     myRootVolumeVolumeType:                    'gp3'
+     myAppVolumeType:                           'gp3'
+     myDataVolumeType:                          'gp3'
+#     myChefRunList:                             'recipe[usf_app_shipping_process_api]'
+
+Parameters:
+#NOTE:  THE SEQUENCE AND NUMBERING MATCHES THE SAMPLE PARAMETER SCRIPT, DOCUMENTATION, AND LABELS ABOVE
+############################
+#START: 1. Application info and configuration values
+
+  myTagDevContacts:
+    Type: String
+
+  myTagOpsContacts:
+    Type: String
+
+  myTagAWSContacts:
+    Type: String
+
+  myTagSAContacts:
+    Type: String
+
+  myTagBizUnit:
+    Type: String
+
+  myTagBizOwner:
+    Type: String
+
+ #Standard values that are unique for this app
+  myEnvironmentType:
+    Type: String
+
+  myEnvironmentTier:
+    Type: String
+
+  myKeyName:
+    Type: String
+
+  myInstanceType:
+    Type: String
+
+  myWaitConditionTimeout:
+    Type: String
+
+  myRootVolumeVolumeSize:
+    Type: String
+
+  myVolume01Size:
+    Type: String
+
+  myVolume02Size:
+    Type: String
+
+  myAppShortName:
+    Type: String
+
+  myProfileRole:
+    Type: String
+
+###End common values all instances
+
+#Values specific to instance01
+  myInstanceSeq01:
+    Type: String
+
+  myInstanceAZ01:
+    Type: String
+
+#Values specific to instance02
+  myInstanceSeq02:
+    Type: String
+
+  myInstanceAZ02:
+    Type: String
+
+#Values specific to instance03
+  myInstanceSeq03:
+    Type: String
+
+  myInstanceAZ03:
+    Type: String
+
+#Values specific to instance04
+  myInstanceSeq04:
+    Type: String
+
+  myInstanceAZ04:
+    Type: String
+
+#Values specific to instance05
+  myInstanceSeq05:
+    Type: String
+
+  myInstanceAZ01:
+    Type: String
+
+#Values specific to instance06
+  myInstanceSeq06:
+    Type: String
+
+  myInstanceAZ02:
+    Type: String
+
+#Values specific to instance07
+  myInstanceSeq07:
+    Type: String
+
+  myInstanceAZ03:
+    Type: String
+
+#Values specific to instance08
+  myInstanceSeq08:
+    Type: String
+
+  myInstanceAZ04:
+    Type: String
+
+  myInstanceCount:
+    Type: String
+
+#Values specific to instance05
+  myInstanceSeq09:
+    Type: String
+
+  myInstanceAZ01:
+    Type: String
+
+#Values specific to instance06
+  myInstanceSeq10:
+    Type: String
+
+  myInstanceAZ02:
+    Type: String
+
+# myProfilePath:
+#   Type: String
+
+  myCustomAMIId:
+    Type: String
+
+  myCustomPostBootstrapPath:
+    Type: String
+
+  myOptionalAppSecurityGroup01:
+   Type: String
+
+  myOptionalVolume02CreateSnapshotOnDelete:
+    Type: String
+
+  # myOptionalInstance01Volume02Snap:
+  #   Type: String
+  #
+  # myOptionalInstance02Volume02Snap:
+  #   Type: String
+  #
+  # myOptionalInstance03Volume02Snap:
+  #   Type: String
+  #
+  # myOptionalInstance04Volume02Snap:
+  #   Type: String
+
+# Chef Bootstrap information
+  # myChefEnv:
+  #   Type: String
+
+  # myChefClientVersion:
+  #   Type: String
+# ALB Information
+  # myCreateNonELBV2PrivateR53:
+  #   Type: String
+
+  myTargetGroupHealthCheckPath:
+    Type: String
+
+  myListenerRulePriority:
+    Type: String
+
+  myApplicationURLPrefix:
+    Type: String
+
+  myALBEnvironmentTier:
+    Type: String
+
+  # myCreateELBV2TargetGroupinPrivateR53:
+  #   Type: String
+
+Resources:
+  theEC2Instance01Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance01
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq01
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ01
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance01Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName01
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance02Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance02
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq02
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ02
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance02Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName02
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance03Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance03
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq03
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ03
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance03Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName03
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance04Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance04
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq04
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ04
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance04Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        # myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName04
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance05Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance05
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq05
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ01
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance01Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName01
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance06Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance06
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq06
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ02
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance02Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName02
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance07Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance07
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq07
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ03
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance03Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName03
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance08Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance08
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq08
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ04
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance04Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        # myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName04
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance09Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance09
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq09
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ01
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance03Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName03
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  theEC2Instance10Stack01:
+    Type: 'AWS::CloudFormation::Stack'
+    Condition: CreateInstance10
+    Properties:
+      TemplateURL: https://us-east-1.console.aws.amazon.com/olfakcodes/golden.yml
+      TimeoutInMinutes: 30
+      Parameters:
+        myAppShortName: !Ref myAppShortName
+        myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+        myAppCode: !FindInMap [myAppValues, myPersistentValues, myAppCode]
+        myAppName: !FindInMap [myAppValues, myPersistentValues, myAppName]
+        myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+        myTagDevContacts: !Ref myTagDevContacts
+        myTagOpsContacts: !Ref myTagOpsContacts
+        myTagAWSContacts: !Ref myTagAWSContacts
+        myTagSAContacts: !Ref myTagSAContacts
+        myTagBizUnit: !Ref myTagBizUnit
+        myTagBizOwner: !Ref myTagBizOwner
+        myEnvironmentType: !Ref myEnvironmentType
+        myEnvironmentTier: !Ref myEnvironmentTier
+        myServerAppCode: !FindInMap [myAppValues, myPersistentValues, myServerAppCode]
+        myInstanceType: !Ref myInstanceType
+        myKeyName: !Ref myKeyName
+        myAMIType: !FindInMap [myAppValues, myPersistentValues, myAMIType]
+        myTagTechAppServerType: !FindInMap [myAppValues, myPersistentValues, myTagTechAppServerType]
+        myInstanceSeq: !Ref myInstanceSeq10
+        myWaitConditionTimeout: !Ref myWaitConditionTimeout
+        myInstanceAZ: !Ref myInstanceAZ02
+        myProfileRole: !Ref myProfileRole
+        myRootVolumeVolumeType: !FindInMap [myAppValues, myPersistentValues, myRootVolumeVolumeType]
+        myRootVolumeVolumeSize: !Ref myRootVolumeVolumeSize
+        myAppVolumeType: !FindInMap [myAppValues, myPersistentValues, myAppVolumeType]
+        myVolume01Size: !Ref myVolume01Size
+        myDataVolumeType: !FindInMap [myAppValues, myPersistentValues, myDataVolumeType]
+        myVolume02Size: !Ref myVolume02Size
+        myOptionalVolume02CreateSnapshotOnDelete: !Ref myOptionalVolume02CreateSnapshotOnDelete
+        # myOptionalInstanceVolume02Snap: !Ref myOptionalInstance04Volume02Snap
+        myCustomAMIId: !Ref myCustomAMIId
+        # myOptionalAppSecurityGroup01: !Ref myOptionalAppSecurityGroup01
+        # myOptionalCustomEC2ServerName: !Ref myOptionalCustomEC2ServerName04
+        myCustomPostBootstrapPath: !Ref myCustomPostBootstrapPath
+        myTagTechVolumeRootBackup:  !FindInMap [myAppValues, myPersistentValues, myTagTechVolumeRootBackup]
+        myTagTechVolume01Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume01Backup]
+        myTagTechVolume02Backup: !FindInMap [myAppValues, myPersistentValues, myTagTechVolume02Backup]
+        # myChefRunList: !FindInMap [myAppValues, myPersistentValues, myChefRunList]
+        # myChefClientVersion: !Ref myChefClientVersion
+        # myChefEnv: !Ref myChefEnv
+
+  # theALBAndDNSStack01:
+  #   Type: 'AWS::CloudFormation::Stack'
+  #   Properties:
+  #     TemplateURL: >-
+  #       https://s3.us-west-2.amazonaws.com/aws.usf.mgmt.plt.devops.productcatalog/cloudformation/master/goldenec2/common-application-nested-usw-stack3-standardec2-alb_v2.yaml
+  #     TimeoutInMinutes: 30
+  #     Parameters:
+  #       myAppShortName: !Ref myAppShortName
+  #       myTagAppId: !FindInMap [myAppValues, myPersistentValues, myTagAppId]
+  #       myAppCode:  !FindInMap [myAppValues, myPersistentValues, myAppCode]
+  #       myAppName:  !FindInMap [myAppValues, myPersistentValues, myALBAppName]
+  #       myTagStackScope: !FindInMap [myAppValues, myPersistentValues, myTagStackScope]
+  #       myTagDevContacts: !Ref myTagDevContacts
+  #       myTagOpsContacts: !Ref myTagOpsContacts
+  #       myTagAWSContacts: !Ref myTagAWSContacts
+  #       myTagSAContacts: !Ref myTagSAContacts
+  #       myTagBizUnit: !Ref myTagBizUnit
+  #       myTagBizOwner: !Ref myTagBizOwner
+  #       myEnvironmentType: !Ref myEnvironmentType
+  #       myTagTechAppServerType: Web Server
+  #       myEnvironmentTier: !Ref myALBEnvironmentTier
+  #       myInstanceCount: !Ref myInstanceCount
+  #       # myCreateELBV2TargetGroupinPrivateR53: !Ref myCreateELBV2TargetGroupinPrivateR53
+  #       # myCreateNonELBV2PrivateR53: !Ref myCreateNonELBV2PrivateR53
+  #       myApplicationURLPrefix: !Ref myApplicationURLPrefix
+  #       myListenerRulePriority: !Ref myListenerRulePriority
+  #       myTargetGroupHealthCheckPath: !Ref myTargetGroupHealthCheckPath
+  #       myEC2InstanceIds:
+  #         !If
+  #           - CreateInstance01ToTG
+  #           - !Sub
+  #             - '${serverid1}'
+  #             - {serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId}
+  #           - !If
+  #             - CreateInstance02ToTG
+  #             - !Sub
+  #               - '${serverid1}, ${serverid2}'
+  #               - {serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId}
+  #             - !If
+  #               - CreateInstance03ToTG
+  #               - !Sub
+  #                 - '${serverid1} , ${serverid2} , ${serverid3}'
+  #                 - {serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId}
+  #               - !If
+  #                 - CreateInstance04ToTG
+  #                 - !Sub
+  #                   - '${serverid1} , ${serverid2} , ${serverid3} , ${serverid4}'
+  #                   - { serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId , serverid4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId }
+  #                 - !If
+  #                   - CreateInstance05ToTG
+  #                   - !Sub
+  #                     - '${serverid1} , ${serverid2} , ${serverid3} , ${serverid4}, ${serverid5}'
+  #                     - { serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId , serverid4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId , serverid5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceId  }
+  #                   - !If
+  #                     - CreateInstance06ToTG
+  #                     - !Sub
+  #                       - '${serverid1} , ${serverid2} , ${serverid3} , ${serverid4}, ${serverid5}, ${serverid6}'
+  #                       - { serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId , serverid4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId , serverid5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceId , serverid6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstanceId  }
+  #                     - !If
+  #                       - CreateInstance07ToTG
+  #                       - !Sub
+  #                         - '${serverid1} , ${serverid2} , ${serverid3} , ${serverid4}, ${serverid5}, ${serverid6}, ${serverid7}'
+  #                         - { serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId , serverid4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId , serverid5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceId , serverid6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstanceId , serverid7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstanceId }
+  #                       - !If
+  #                         - CreateInstance08ToTG
+  #                         - !Sub
+  #                           - '${serverid1} , ${serverid2} , ${serverid3} , ${serverid4}, ${serverid5}, ${serverid6}, ${serverid7}, ${serverid8}'
+  #                           - { serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId , serverid4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId , serverid5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceId , serverid6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstanceId , serverid7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstanceId , serverid8: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstanceId    }
+  #                         - !If
+  #                           - CreateInstance09ToTG
+  #                           - !Sub
+  #                             - '${serverid1} , ${serverid2} , ${serverid3} , ${serverid4}, ${serverid5}, ${serverid6}, ${serverid7}, ${serverid8}, ${serverid9}'
+  #                             - { serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId , serverid4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId , serverid5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceId , serverid6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstanceId , serverid7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstanceId , serverid8: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstanceId , serverid9: !GetAtt theEC2Instance09Stack01.Outputs.outputTheEC2InstanceId  }
+  #                           - !If
+  #                             - CreateInstance10ToTG
+  #                             - !Sub
+  #                               - '${serverid1} , ${serverid2} , ${serverid3} , ${serverid4}, ${serverid5}, ${serverid6}, ${serverid7}, ${serverid8}, ${serverid9}, ${serverid10}'
+  #                               - { serverid1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId , serverid2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId , serverid3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId , serverid4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId , serverid5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceId , serverid6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstanceId , serverid7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstanceId , serverid8: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstanceId , serverid9: !GetAtt theEC2Instance09Stack01.Outputs.outputTheEC2InstanceId  , serverid10: !GetAtt theEC2Instance10Stack01.Outputs.outputTheEC2InstanceId  }
+  #                             - !Ref AWS::NoValue
+  #       myEC2InstancePrivateIps:
+  #         !If
+  #           - CreateInstance01ToTG
+  #           - !Sub
+  #             - '${serverip1}'
+  #             - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp }
+  #           - !If
+  #             - CreateInstance02ToTG
+  #             - !Sub
+  #               - '${serverip1} , ${serverip2}'
+  #               - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp }
+  #             - !If
+  #               - CreateInstance03ToTG
+  #               - !Sub
+  #                 - '${serverip1} , ${serverip2} , ${serverip3}'
+  #                 - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp }
+  #               - !If
+  #                 - CreateInstance04ToTG
+  #                 - !Sub
+  #                   - '${serverip1} , ${serverip2} , ${serverip3} , ${serverip4}'
+  #                   - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp }
+  #                 - !If
+  #                   - CreateInstance05ToTG
+  #                   - !Sub
+  #                     - '${serverip1} , ${serverip2} , ${serverip3} , ${serverip4}, ${serverip5}'
+  #                     - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip5: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp }
+  #                   - !If
+  #                     - CreateInstance06ToTG
+  #                     - !Sub
+  #                       - '${serverip1} , ${serverip2} , ${serverip3} , ${serverip4}, ${serverip5}, ${serverip6}'
+  #                       - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstancePrivateIp }
+  #                     - !If
+  #                       - CreateInstance07ToTG
+  #                       - !Sub
+  #                         - '${serverip1} , ${serverip2} , ${serverip3} , ${serverip4}, ${serverip5}, ${serverip6}, ${serverip7}'
+  #                         - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstancePrivateIp  , serverip7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstancePrivateIp  }
+  #                       - !If
+  #                         - CreateInstance08ToTG
+  #                         - !Sub
+  #                           - '${serverip1} , ${serverip2} , ${serverip3} , ${serverip4}, ${serverip5}, ${serverip6}, ${serverip7}, ${serverip8}'
+  #                           - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstancePrivateIp  , serverip7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstancePrivateIp  , serverip8: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstancePrivateIp}
+  #                         - !If
+  #                           - CreateInstance09ToTG
+  #                           - !Sub
+  #                             - '${serverip1} , ${serverip2} , ${serverip3} , ${serverip4}, ${serverip5}, ${serverip6}, ${serverip7}, ${serverip8}, ${serverip9}'
+  #                             - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstancePrivateIp  , serverip7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstancePrivateIp  , serverip8: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstancePrivateIp, serverip9: !GetAtt theEC2Instance09Stack01.Outputs.outputTheEC2InstancePrivateIp}
+  #                           - !If
+  #                             - CreateInstance10ToTG
+  #                             - !Sub
+  #                               - '${serverip1} , ${serverip2} , ${serverip3} , ${serverip4}, ${serverip5}, ${serverip6}, ${serverip7}, ${serverip8}, ${serverip9}, ${serverip10}'
+  #                               - { serverip1: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip2: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip3: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip4: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip5: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip6: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstancePrivateIp  , serverip7: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstancePrivateIp  , serverip8: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip9: !GetAtt theEC2Instance09Stack01.Outputs.outputTheEC2InstancePrivateIp , serverip10: !GetAtt theEC2Instance10Stack01.Outputs.outputTheEC2InstancePrivateIp}
+  #                             - !Ref AWS::NoValue
+
+Outputs:
+
+  theEC2Instance01Stack01TheEC2InstanceId:
+    Description: instance01 id
+    Condition: CreateInstance01
+    Value: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance01Id"
+
+  theEC2Instance01Stack01TheEC2HostNameId:
+    Description: instance01 hostname
+    Condition: CreateInstance01
+    Value: !GetAtt theEC2Instance01Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theEC2Instance02Stack01TheEC2InstanceId:
+    Description: instance02 id
+    Condition: CreateInstance02
+    Value: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance02Id"
+
+  theEC2Instance02Stack01TheEC2HostNameId:
+    Description: instance02 hostname
+    Condition: CreateInstance02
+    Value: !GetAtt theEC2Instance02Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theEC2Instance03Stack01TheEC2InstanceId:
+    Description: instance03 id
+    Condition: CreateInstance03
+    Value: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance03Id"
+
+  theEC2Instance03Stack01TheEC2HostNameId:
+    Description: instance03 hostname
+    Condition: CreateInstance03
+    Value: !GetAtt theEC2Instance03Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theEC2Instance04Stack01TheEC2InstanceId:
+    Description: instance04 id
+    Condition: CreateInstance04
+    Value: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance04Id"
+
+  theEC2Instance04Stack01TheEC2HostNameId:
+    Description: instance04 hostname
+    Condition: CreateInstance04
+    Value: !GetAtt theEC2Instance04Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theEC2Instance05Stack01TheEC2InstanceId:
+    Description: instance05 id
+    Condition: CreateInstance05
+    Value: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance05Id"
+
+  theEC2Instance05Stack01TheEC2HostNameId:
+    Description: instance05 hostname
+    Condition: CreateInstance05
+    Value: !GetAtt theEC2Instance05Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theEC2Instance06Stack01TheEC2InstanceId:
+    Description: instance06 id
+    Condition: CreateInstance06
+    Value: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance06Id"
+
+  theEC2Instance06Stack01TheEC2HostNameId:
+    Description: instance06 hostname
+    Condition: CreateInstance06
+    Value: !GetAtt theEC2Instance06Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theEC2Instance07Stack01TheEC2InstanceId:
+    Description: instance07 id
+    Condition: CreateInstance07
+    Value: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance07Id"
+
+  theEC2Instance07Stack01TheEC2HostNameId:
+    Description: instance07 hostname
+    Condition: CreateInstance07
+    Value: !GetAtt theEC2Instance07Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theEC2Instance08Stack01TheEC2InstanceId:
+    Description: instance08 id
+    Condition: CreateInstance08
+    Value: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance08Id"
+
+  theEC2Instance08Stack01TheEC2HostNameId:
+    Description: instance08 hostname
+    Condition: CreateInstance08
+    Value: !GetAtt theEC2Instance08Stack01.Outputs.outputTheEC2InstanceHostName
+
+  theALBAndDNSStack01TheTargetGroupId:
+    Description: target group full name
+    Value: !GetAtt theALBAndDNSStack01.Outputs.outputTheELBV2TargetGroupFullName
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateTagetGroupFullNameId"
