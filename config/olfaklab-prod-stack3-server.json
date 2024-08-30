@@ -93,19 +93,19 @@
   },
   {
   "ParameterKey": "myInstanceAZ01",
-  "ParameterValue": "us-west-2a"
+  "ParameterValue": "us-east-1a"
   },
   {
   "ParameterKey": "myInstanceAZ02",
-  "ParameterValue": "us-west-2b"
+  "ParameterValue": "us-east-1b"
   },
   {
   "ParameterKey": "myInstanceAZ03",
-  "ParameterValue": "us-west-2c"
+  "ParameterValue": "us-east-1c"
   },
   {
   "ParameterKey": "myInstanceAZ04",
-  "ParameterValue": "us-west-2a"
+  "ParameterValue": "us-east-1a"
   },
   {
   "ParameterKey": "myInstanceCount",
